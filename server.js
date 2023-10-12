@@ -6,7 +6,6 @@ const puppeteer = require('puppeteer');
 
 const app = express();
 const port = 9000;
-
 const storage = multer.memoryStorage(); // Store the file in memory
 const upload = multer({ storage: storage });
 
