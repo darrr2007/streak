@@ -9,6 +9,13 @@ const { Readable } = require("stream");
 const app = express();
 const port = 9000;
 
+let browser;
+
+puppeteer.launch().then(res => {
+  browser = res;
+});
+
+
 //multer is to store files temporarily in memory
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -22,12 +29,20 @@ app.get("/", (req, res) => {
 
 const certificates = [
   {
-    path: "./A.html",
-    id: "a",
+    path: "./templates/OutstandingCertificate.html",
+    id: "OutstandingCertificate",
   },
   {
-    path: "./B.html",
-    id: "B",
+    path: "./templates/ParticipationCertificate.html",
+    id: "ParticipationCertificate",
+  },
+  {
+    path: "./templates/ReportsWOTax.html",
+    id: "ReportsWOTax",
+  },
+  {
+    path: "./templates/ReportsWTax.html",
+    id: "ReportsWTax",
   },
 ];
 
@@ -41,13 +56,17 @@ app.post("/upload-csv", upload.single("file"), async (req, res) => {
 
   data.forEach((csvRowData) => {
     certificates.forEach(async (certificate) => {
-      // const data = await fs.readFile(certificate.path, 'utf8');
+      const data = await fs.promises.readFile(certificate.path, 'utf8');
 
-      const data = `<div> {{Name}} </div>`;
+      // const data = `<div> {{Name}} </div>`;
 
-      const certificateHtml = data.replace("{{Name}}", csvRowData.name);
+      const certificateHtml = data.replace("{{name}}", csvRowData.name)
+      .replace("{{class}}",csvRowData.class)
+      .replace("{{school}}",csvRowData.school)
+      .replace("{{rank}}",csvRowData.rank)
+      .replace("{{date}}",csvRowData.date);
 
-      const fileContent = `<div> ${csvRowData.name} </div>`;
+      const fileContent = certificateHtml;
 
       const pdfFilePath = `./certificates/${csvRowData.rank}.${certificate.id}.pdf`;
 
@@ -68,9 +87,7 @@ app.post("/upload-csv", upload.single("file"), async (req, res) => {
 });
 
 async function convertHTMLToPDF(content, outputFilePath) {
-  const browser = await puppeteer.launch();
   const page = await browser.newPage();
-
   await page.setContent(content);
 
   const contentBox = await page.evaluate(() => {
@@ -92,9 +109,6 @@ async function convertHTMLToPDF(content, outputFilePath) {
     printBackground: true,
   });
 
-  await page.screenshot({ path: "output.png" });
-
-  await browser.close();
 }
 
 // Function to parse CSV buffer
