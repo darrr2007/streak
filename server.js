@@ -4,7 +4,7 @@ const cors = require("cors");
 const fs = require("fs");
 const puppeteer = require("puppeteer");
 const csv = require("csv-parser");
-const { Readable } = require('stream');
+const { Readable } = require("stream");
 
 const app = express();
 const port = 9000;
@@ -20,6 +20,17 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
+const certificates = [
+  {
+    path: "./A.html",
+    id: "a",
+  },
+  {
+    path: "./B.html",
+    id: "B",
+  },
+];
+
 app.post("/upload-csv", upload.single("file"), async (req, res) => {
   if (!req.file) {
     return res.status(400).send("No file uploaded.");
@@ -28,74 +39,64 @@ app.post("/upload-csv", upload.single("file"), async (req, res) => {
 
   const data = await parseCSVBuffer(buffer);
 
-  data.forEach(csvRowData => {
-    // Create html string with the csvrow data
+  data.forEach((csvRowData) => {
+    certificates.forEach(async (certificate) => {
+      // const data = await fs.readFile(certificate.path, 'utf8');
 
-    // Convert html string to html file
+      const data = `<div> {{Name}} </div>`;
 
-    // Convert html file to pdf and write it 
+      const certificateHtml = data.replace("{{Name}}", csvRowData.name);
 
+      const fileContent = `<div> ${csvRowData.name} </div>`;
 
+      const pdfFilePath = `./certificates/${csvRowData.rank}.${certificate.id}.pdf`;
 
+      await convertHTMLToPDF(fileContent, pdfFilePath);
 
-    
+      // Create html string with the csvrow data
+
+      // Convert html string to html file
+      // Convert html file to pdf and write it
+    });
   });
 
-    // Convert all files to a zip
+  // Convert all files to a zip
 
-    // Trigger download for zip
-
-  console.log(data)
+  // Trigger download for zip
 
   return;
-
-  const fileContent = req.file.buffer.toString();
-
-  // Convert the string to an HTML file
-  const htmlFilePath = "uploaded.html";
-
-  fs.writeFileSync(htmlFilePath, fileContent);
-
-  // Function to convert HTML to PDF using Puppeteer
-  async function convertHTMLToPDF(inputFilePath, outputFilePath) {
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-
-    const content = fs.readFileSync(inputFilePath, "utf8");
-    await page.setContent(content);
-
-    const contentBox = await page.evaluate(() => {
-      const element = document.querySelector("div");
-      const rect = element.getBoundingClientRect();
-      return {
-        width: rect.width,
-        height: rect.height,
-      };
-    });
-
-    const pdfWidth = contentBox.width;
-    const pdfHeight = contentBox.height;
-
-    await page.pdf({
-      path: outputFilePath,
-      width: pdfWidth,
-      height: pdfHeight,
-      printBackground: true,
-    });
-
-    await page.screenshot({ path: "output.png" });
-
-    await browser.close();
-  }
-
-  try {
-    const outputFilePath = "server.pdf";
-    await convertHTMLToPDF(htmlFilePath, outputFilePath);
-    res.download(outputFilePath);
-  } catch (error) {
-    res.status(500).send("Error converting to PDF");
-  }
 });
+
+async function convertHTMLToPDF(content, outputFilePath) {
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+
+  await page.setContent(content);
+
+  const contentBox = await page.evaluate(() => {
+    const element = document.querySelector("div");
+    const rect = element.getBoundingClientRect();
+    return {
+      width: rect.width,
+      height: rect.height,
+    };
+  });
+
+  const pdfWidth = contentBox.width;
+  const pdfHeight = contentBox.height;
+
+  await page.pdf({
+    path: outputFilePath,
+    width: pdfWidth,
+    height: pdfHeight,
+    printBackground: true,
+  });
+
+  await page.screenshot({ path: "output.png" });
+
+  await browser.close();
+}
+
 // Function to parse CSV buffer
 async function parseCSVBuffer(buffer) {
   return new Promise((resolve, reject) => {
@@ -106,19 +107,19 @@ async function parseCSVBuffer(buffer) {
     bufferStream.push(buffer);
     bufferStream.push(null);
 
-    bufferStream.pipe(csv())
-      .on('data', (data) => {
+    bufferStream
+      .pipe(csv())
+      .on("data", (data) => {
         results.push(data);
       })
-      .on('end', () => {
+      .on("end", () => {
         resolve(results);
       })
-      .on('error', (error) => {
+      .on("error", (error) => {
         reject(error);
       });
   });
 }
-
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
