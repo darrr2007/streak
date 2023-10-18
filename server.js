@@ -5,8 +5,8 @@ const fs = require("fs");
 const puppeteer = require("puppeteer");
 const csv = require("csv-parser");
 const archiver = require('archiver');
-const AdmZip = require('adm-zip');
 const { Readable } = require("stream");
+const handlebars = require("handlebars");
 
 const app = express();
 const port = 9000;
@@ -17,13 +17,11 @@ puppeteer.launch().then((res) => {
   browser = res;
 });
 
-//multer is to store files temporarily in memory
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 app.use(cors());
 
-//checking if it is connected or not
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
@@ -55,61 +53,28 @@ app.post("/upload-csv", upload.single("file"), async (req, res) => {
 
   const data = await parseCSVBuffer(buffer);
 
-  data.forEach((csvRowData) => {
-    certificates.forEach(async (certificate) => {
-      const data = await fs.promises.readFile(certificate.path, "utf8");
-
-      // const data = `<div> {{Name}} </div>`;
-
-      const certificateHtml = data
-        .replace("{{name}}", csvRowData.name)
-        .replace("{{class}}", csvRowData.class)
-        .replace("{{school}}", csvRowData.school)
-        .replace("{{rank}}", csvRowData.rank)
-        .replace("{{date}}", csvRowData.date);
-
-      const fileContent = certificateHtml;
-
+  const promises = data.map(async (csvRowData) => {
+    const pdfPromises = certificates.map(async (certificate) => {
+      const certificateHtml = await generateCertificateHtml(certificate, csvRowData);
       const pdfFilePath = `./certificates/${csvRowData.rank}.${certificate.id}.pdf`;
-
-      await convertHTMLToPDF(fileContent, pdfFilePath);
-
-      // Create html string with the csvrow data
-
-      // Convert html string to html file
-      // Convert html file to pdf and write it
+      await convertHTMLToPDF(certificateHtml, pdfFilePath);
     });
+
+    await Promise.all(pdfPromises);
   });
 
-  const directoryPath = "./certificates"; // Replace with the path of the directory you want to zip
+  await Promise.all(promises);
 
-  // Create a zip file in memory using archiver
-  const zip = archiver("zip", {
-    zlib: { level: 9 }, // Compression level (optional)
-  });
+  const zipFileName = `${data[0].name}_certificates.zip`;
 
-  // Pipe the zip file to the response
-  zip.pipe(res);
-
-  // Read the directory and add its contents to the zip file
-  fs.readdir(directoryPath, (err, files) => {
-    if (err) {
-      res.status(500).send("Error reading the directory");
-    } else {
-      files.forEach((file) => {
-        const filePath = `${directoryPath}/${file}`;
-        zip.file(filePath, { name: file });
-      });
-
-      // Finalize the zip file and send it as a response
-      zip.finalize();
-
-      res.attachment("certificates.zip"); // Set the download filename
-    }
-  });
-
-  return;
+  createAndSendZip(res, zipFileName);
 });
+
+async function generateCertificateHtml(certificate, csvRowData) {
+  const data = await fs.promises.readFile(certificate.path, "utf8");
+  const template = handlebars.compile(data);
+  return template(csvRowData);
+}
 
 async function convertHTMLToPDF(content, outputFilePath) {
   const page = await browser.newPage();
@@ -131,17 +96,16 @@ async function convertHTMLToPDF(content, outputFilePath) {
     path: outputFilePath,
     width: pdfWidth,
     height: pdfHeight,
-    printBackground: true,
+    // printBackground: true,
   });
 }
 
-// Function to parse CSV buffer
 async function parseCSVBuffer(buffer) {
   return new Promise((resolve, reject) => {
     const results = [];
 
     const bufferStream = new Readable();
-    bufferStream._read = () => {}; // To avoid stream errors
+    bufferStream._read = () => {};
     bufferStream.push(buffer);
     bufferStream.push(null);
 
@@ -156,6 +120,32 @@ async function parseCSVBuffer(buffer) {
       .on("error", (error) => {
         reject(error);
       });
+  });
+}
+
+function createAndSendZip(res, zipFileName) {
+  const directoryPath = "./certificates";
+  const zip = archiver("zip", {
+    zlib: { level: 9 },
+  });
+
+  zip.pipe(res);
+  zip.on("error", (err) => {
+    res.status(500).send("Error creating the zip file");
+  });
+
+  fs.readdir(directoryPath, (err, files) => {
+    if (err) {
+      res.status(500).send("Error reading the directory");
+    } else {
+      files.forEach((file) => {
+        const filePath = `${directoryPath}/${file}`;
+        zip.file(filePath, { name: file });
+      });
+
+      zip.finalize();
+      res.attachment(zipFileName);
+    }
   });
 }
 
