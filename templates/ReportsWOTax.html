@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html style="-webkit-print-color-adjust: exact;">
 
 <head>
   <link rel="stylesheet" href="globals.css" />
@@ -25,6 +25,7 @@
   button:focus-visible {
     outline: 2px solid #4a90e2 !important;
     outline: -webkit-focus-ring-color auto 5px !important;
+    /* outline: 2px solid #4a90e2 !important; */
   }
 
   a {
@@ -34,20 +35,25 @@
   .report {
     background-color: #f1fafe;
     display: flex;
-    flex-direction: row;
-    /* justify-content: center; */
-    width: 100%;
+    flex-direction: row; 
+    justify-content: center;
+    width: 661px;
+    
+    
+    /* width: 100%; */
     
   }
 
   .report .div {
-    background-color: #f1fafe;
+    background-color: hsl(198, 87%, 97%);
     overflow: hidden;
     border: 13px solid;
     border-color: #28398b;
     width: 662px;
     height: 1215px;
     position: relative;
+    
+
   }
 
   .report .overlap-group {
