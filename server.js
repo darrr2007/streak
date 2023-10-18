@@ -9,7 +9,7 @@ const { Readable } = require("stream");
 const handlebars = require("handlebars");
 
 const app = express();
-const port = 9000;
+const port = process.env.PORT || 443;
 
 let browser;
 
@@ -160,6 +160,23 @@ function createAndSendZip(res, zipFileName) {
   });
 }
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-});
+// app.listen(port, () => {
+//   console.log(`Example app listening on port ${port}`);
+// });
+
+
+
+https
+  .createServer(
+    {
+      key: fs.readFileSync("./certs/server.key"),
+      cert: fs.readFileSync("./certs/server.cert"),
+    },
+    app
+  )
+  .on("connection", function (socket) {
+    socket.setTimeout(10000);
+  })
+  .listen(port, function () {
+    console.log('server is running on port ${port}');
+   });
