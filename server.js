@@ -89,12 +89,14 @@ app.post("/upload-csv", upload.single("file"), async (req, res) => {
 });
 
 async function generateCertificateHtml(certificate, csvRowData) {
+  console.log("called generateCertificateHtml");
   const data = await fs.promises.readFile(certificate.path, "utf8");
   const template = handlebars.compile(data);
   return template(csvRowData);
 }
 
 async function convertHTMLToPDF(content, outputFilePath) {
+  console.log("called convertHTMLToPDF");
   const page = await browser.newPage();
   await page.setContent(content);
 
@@ -119,6 +121,7 @@ async function convertHTMLToPDF(content, outputFilePath) {
 }
 
 async function parseCSVBuffer(buffer) {
+  console.log("called parseCSVBuffer");
   return new Promise((resolve, reject) => {
     const results = [];
 
@@ -142,6 +145,7 @@ async function parseCSVBuffer(buffer) {
 }
 
 function createAndSendZip(res, zipFileName) {
+  console.log("called createAndSendZip");
   const directoryPath = "./certificates";
   const zip = archiver("zip", {
     zlib: { level: 9 },
