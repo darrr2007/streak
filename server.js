@@ -66,7 +66,7 @@ app.post("/upload-csv", upload.single("file"), async (req, res) => {
   const buffer = req.file.buffer;
 
   const data = await parseCSVBuffer(buffer);
-  console.log(data);
+
   const promises = data.map(async (csvRowData) => {
     const pdfPromises = certificates.map(async (certificate) => {
       const certificateHtml = await generateCertificateHtml(
@@ -81,6 +81,7 @@ app.post("/upload-csv", upload.single("file"), async (req, res) => {
   });
 
   await Promise.all(promises);
+  console.log(promises);
 
   const zipFileName = `${data[0].name}_certificates.zip`;
 
