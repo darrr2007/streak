@@ -73,7 +73,7 @@ app.post("/upload-csv", upload.single("file"), async (req, res) => {
         certificate,
         csvRowData
       );
-      const pdfFilePath = `./certificates/${csvRowData.rank}.${certificate.id}.pdf`;
+      const pdfFilePath = `./certificates/${csvRowData.name}.${certificate.id}.pdf`;
       await convertHTMLToPDF(certificateHtml, pdfFilePath);
     });
 
@@ -171,21 +171,21 @@ function createAndSendZip(res, zipFileName) {
   });
 }
 
-// app.listen(port, () => {
-//   console.log(`Example app listening on port ${port}`);
-// });
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`);
+});
 
-https
-  .createServer(
-    {
-      key: fs.readFileSync("./certs/server.key"),
-      cert: fs.readFileSync("./certs/server.cert"),
-    },
-    app
-  )
-  .on("connection", function (socket) {
-    socket.setTimeout(10000);
-  })
-  .listen(port, function () {
-    console.log(`server is running on port ${port}`);
-  });
+// https
+//   .createServer(
+//     {
+//       key: fs.readFileSync("./certs/server.key"),
+//       cert: fs.readFileSync("./certs/server.cert"),
+//     },
+//     app
+//   )
+//   .on("connection", function (socket) {
+//     socket.setTimeout(10000);
+//   })
+//   .listen(port, function () {
+//     console.log(`server is running on port ${port}`);
+//   });
