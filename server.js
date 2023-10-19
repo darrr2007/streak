@@ -42,19 +42,19 @@ app.get("/", (req, res) => {
 
 const certificates = [
   {
-    path: "./templates/OutstandingCertificate.html",
+    path: __dirname + "/templates/OutstandingCertificate.html",
     id: "OutstandingCertificate",
   },
   {
-    path: "./templates/ParticipationCertificate.html",
+    path: __dirname + "/templates/ParticipationCertificate.html",
     id: "ParticipationCertificate",
   },
   {
-    path: "./templates/ReportsWOTax.html",
+    path: __dirname + "/templates/ReportsWOTax.html",
     id: "ReportsWOTax",
   },
   {
-    path: "./templates/ReportsWTax.html",
+    path: __dirname + "/templates/ReportsWTax.html",
     id: "ReportsWTax",
   },
 ];
