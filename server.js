@@ -68,13 +68,17 @@ app.post("/upload-csv", upload.single("file"), async (req, res) => {
   const data = await parseCSVBuffer(buffer);
 
   const promises = data.map(async (csvRowData) => {
-    const pdfPromises = certificates.map(async (certificate) => {
+    const pdfPromises = certificates.map(async (certificate, index) => {
       const certificateHtml = await generateCertificateHtml(
         certificate,
         csvRowData
       );
       const pdfFilePath = `./certificates/${csvRowData.name}.${certificate.id}.pdf`;
-      await convertHTMLToPDF(certificateHtml, pdfFilePath);
+      await convertHTMLToPDF(
+        certificateHtml,
+        pdfFilePath
+        // index === certificates.length - 1 ? true : false
+      );
     });
 
     await Promise.all(pdfPromises);
@@ -95,7 +99,7 @@ async function generateCertificateHtml(certificate, csvRowData) {
   return template(csvRowData);
 }
 
-async function convertHTMLToPDF(content, outputFilePath) {
+async function convertHTMLToPDF(content, outputFilePath, isLast) {
   console.log("called convertHTMLToPDF");
   const page = await browser.newPage();
   await page.setContent(content);
@@ -118,6 +122,10 @@ async function convertHTMLToPDF(content, outputFilePath) {
     height: pdfHeight,
     // printBackground: true,
   });
+  // if (isLast) {
+  //   await browser.close();
+  // }
+  // console.log({ isLast });
 }
 
 async function parseCSVBuffer(buffer) {
@@ -171,21 +179,28 @@ function createAndSendZip(res, zipFileName) {
   });
 }
 
-// app.listen(port, () => {
-//   console.log(`Example app listening on port ${port}`);
-// });
+process.on("SIGINT", async () => {
+  if (browser) {
+    await browser.close();
+  }
+  process.exit(0);
+});
 
-https
-  .createServer(
-    {
-      key: fs.readFileSync("./certs/server.key"),
-      cert: fs.readFileSync("./certs/server.cert"),
-    },
-    app
-  )
-  .on("connection", function (socket) {
-    socket.setTimeout(10000);
-  })
-  .listen(port, function () {
-    console.log(`server is running on port ${port}`);
-  });
+app.listen(port, () => {
+  console.log(`Example app listening on port ${port}`);
+});
+
+// https
+//   .createServer(
+//     {
+//       key: fs.readFileSync("./certs/server.key"),
+//       cert: fs.readFileSync("./certs/server.cert"),
+//     },
+//     app
+//   )
+//   .on("connection", function (socket) {
+//     socket.setTimeout(10000);
+//   })
+//   .listen(port, function () {
+//     console.log(`server is running on port ${port}`);
+//   });
