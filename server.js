@@ -12,6 +12,25 @@ var https = require("https");
 const app = express();
 const port = process.env.PORT || 443;
 
+let browser;
+
+puppeteer
+  .launch({
+    headless: "new",
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable--accelerated-2d-canvas",
+      "--no-first-run",
+      "--no-zygote",
+      "--disable-gpu",
+    ],
+  })
+  .then((res) => {
+    browser = res;
+  });
+
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
@@ -77,51 +96,8 @@ async function generateCertificateHtml(certificate, csvRowData) {
 }
 
 async function convertHTMLToPDF(content, outputFilePath) {
-  const browser = await puppeteer.launch({
-    userDataDir: "./tmp",
-    headless: true,
-    args: [
-      " --disable-features=IsolateOrigins",
-      "--disable-site-isolation-trials",
-      "--autoplay-policy=user-gesture-required",
-      "--disable-background-networking",
-      "--disable-background-timer-throttling",
-      "--disable-backgrounding-occluded-windows",
-      "--disable-breakpad",
-      "--disable-client-side-phishing-detection",
-      "--disable-component-update",
-      "--disable-default-apps",
-      "--disable-dev-shm-usage",
-      "--disable-domain-reliability",
-      "--disable-extensions",
-      "--disable-features=AudioServiceOutOfProcess",
-      "--disable-hang-monitor",
-      "--disable-ipc-flooding-protection",
-      "--disable-notifications",
-      "--disable-offer-store-unmasked-wallet-cards",
-      "--disable-popup-blocking",
-      "--disable-print-preview",
-      "--disable-prompt-on-repost",
-      "--disable-renderer-backgrounding",
-      "--disable-setuid-sandbox",
-      "--disable-speech-api",
-      "--disable-sync",
-      "--hide-scrollbars",
-      "--ignore-gpu-blacklist",
-      "--metrics-recording-only",
-      "--mute-audio",
-      "--no-default-browser-check",
-      "--no-first-run",
-      "--no-pings",
-      "--no-sandbox",
-      "--no-zygote",
-      "--password-store=basic",
-      "--use-gl=swiftshader",
-      "--use-mock-keychain",
-    ],
-  });
+  console.log("called convertHTMLToPDF");
   const page = await browser.newPage();
-  await page.setDefaultNavigationTimeout(0);
   await page.setContent(content);
 
   const contentBox = await page.evaluate(() => {
@@ -135,48 +111,13 @@ async function convertHTMLToPDF(content, outputFilePath) {
 
   const pdfWidth = contentBox.width;
   const pdfHeight = contentBox.height;
-  await page.pdf({ path: pdfFilePath, width: pdfWidth, height: pdfHeight });
-  await browser.close();
 
-  // let browser;
-
-  // puppeteer
-  //   .launch({
-  //     headless: true,
-  //     args: [
-  //       "--no-sandbox",
-  //       "--disable-setuid-sandbox",
-  //       "--disable-dev-shm-usage",
-  //       "--disable--accelerated-2d-canvas",
-  //       "--no-first-run",
-  //       "--no-zygote",
-  //       "--disable-gpu",
-  //     ],
-  //   })
-  //   .then(async (res) => {
-  //     browser = res;
-  //     const page = await browser.newPage();
-  //     await page.setContent(content);
-
-  //     const contentBox = await page.evaluate(() => {
-  //       const element = document.querySelector("div");
-  //       const rect = element.getBoundingClientRect();
-  //       return {
-  //         width: rect.width,
-  //         height: rect.height,
-  //       };
-  //     });
-
-  //     const pdfWidth = contentBox.width;
-  //     const pdfHeight = contentBox.height;
-
-  //     await page.pdf({
-  //       path: outputFilePath,
-  //       width: pdfWidth,
-  //       height: pdfHeight,
-  //       // printBackground: true,
-  //     });
-  //   });
+  await page.pdf({
+    path: outputFilePath,
+    width: pdfWidth,
+    height: pdfHeight,
+    // printBackground: true,
+  });
 }
 
 async function parseCSVBuffer(buffer) {
