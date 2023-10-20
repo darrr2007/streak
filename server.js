@@ -4,30 +4,31 @@ const cors = require("cors");
 const fs = require("fs");
 const puppeteer = require("puppeteer");
 const csv = require("csv-parser");
-const archiver = require('archiver');
+const archiver = require("archiver");
 const { Readable } = require("stream");
 const handlebars = require("handlebars");
-var https = require("https");
-
+// var https = require("https");
 
 const app = express();
-const port = process.env.PORT || 443;
+const port = process.env.PORT || 443;
 
 let browser;
 
-puppeteer.launch({
-  args: [
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
-    '--disable-dev-shm-usage',
-    '--disable--accelerated-2d-canvas',
-    '--no-first-run',
-    '--no-zygote',
-    '--disable-gpu',
-  ]
-}).then((res) => {
-  browser = res;
-});
+puppeteer
+  .launch({
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable--accelerated-2d-canvas",
+      "--no-first-run",
+      "--no-zygote",
+      "--disable-gpu",
+    ],
+  })
+  .then((res) => {
+    browser = res;
+  });
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -35,7 +36,8 @@ const upload = multer({ storage: storage });
 app.use(cors());
 
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  // res.send("Hello World!");
+  console.log("hello");
 });
 
 const certificates = [
@@ -55,7 +57,6 @@ const certificates = [
     path: "./templates/ReportsWTax.html",
     id: "ReportsWTax",
   },
-  
 ];
 
 app.post("/upload-csv", upload.single("file"), async (req, res) => {
@@ -68,7 +69,10 @@ app.post("/upload-csv", upload.single("file"), async (req, res) => {
 
   const promises = data.map(async (csvRowData) => {
     const pdfPromises = certificates.map(async (certificate) => {
-      const certificateHtml = await generateCertificateHtml(certificate, csvRowData);
+      const certificateHtml = await generateCertificateHtml(
+        certificate,
+        csvRowData
+      );
       const pdfFilePath = `./certificates/${csvRowData.rank}.${certificate.id}.pdf`;
       await convertHTMLToPDF(certificateHtml, pdfFilePath);
     });
@@ -109,7 +113,7 @@ async function convertHTMLToPDF(content, outputFilePath) {
     path: outputFilePath,
     width: pdfWidth,
     height: pdfHeight,
-    // printBackground: true,
+    printBackground: true,
   });
 }
 
@@ -158,15 +162,21 @@ function createAndSendZip(res, zipFileName) {
 
       zip.finalize();
       res.attachment(zipFileName);
+      
     }
   });
 }
 
+process.on('SIGINT', async () => {
+  if (browser) {
+    await browser.close();
+  }
+  process.exit(0);
+});
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
-
-
 
 // https
 //   .createServer(
