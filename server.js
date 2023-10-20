@@ -92,30 +92,30 @@ async function convertHTMLToPDF(content, outputFilePath) {
         "--disable-gpu",
       ],
     })
-    .then((res) => {
+    .then(async (res) => {
       browser = res;
+      const page = await browser.newPage();
+      await page.setContent(content);
+
+      const contentBox = await page.evaluate(() => {
+        const element = document.querySelector("div");
+        const rect = element.getBoundingClientRect();
+        return {
+          width: rect.width,
+          height: rect.height,
+        };
+      });
+
+      const pdfWidth = contentBox.width;
+      const pdfHeight = contentBox.height;
+
+      await page.pdf({
+        path: outputFilePath,
+        width: pdfWidth,
+        height: pdfHeight,
+        // printBackground: true,
+      });
     });
-  const page = await browser.newPage();
-  await page.setContent(content);
-
-  const contentBox = await page.evaluate(() => {
-    const element = document.querySelector("div");
-    const rect = element.getBoundingClientRect();
-    return {
-      width: rect.width,
-      height: rect.height,
-    };
-  });
-
-  const pdfWidth = contentBox.width;
-  const pdfHeight = contentBox.height;
-
-  await page.pdf({
-    path: outputFilePath,
-    width: pdfWidth,
-    height: pdfHeight,
-    // printBackground: true,
-  });
 }
 
 async function parseCSVBuffer(buffer) {
