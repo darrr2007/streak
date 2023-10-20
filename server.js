@@ -7,7 +7,7 @@ const csv = require("csv-parser");
 const archiver = require("archiver");
 const { Readable } = require("stream");
 const handlebars = require("handlebars");
-var https = require("https");
+// var https = require("https");
 
 const app = express();
 const port = process.env.PORT || 443;
@@ -16,7 +16,6 @@ let browser;
 
 puppeteer
   .launch({
-    headless: "new",
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
@@ -37,24 +36,25 @@ const upload = multer({ storage: storage });
 app.use(cors());
 
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  // res.send("Hello World!");
+  console.log("hello");
 });
 
 const certificates = [
   {
-    path: __dirname + "/templates/OutstandingCertificate.html",
+    path: "./templates/OutstandingCertificate.html",
     id: "OutstandingCertificate",
   },
   {
-    path: __dirname + "/templates/ParticipationCertificate.html",
+    path: "./templates/ParticipationCertificate.html",
     id: "ParticipationCertificate",
   },
   {
-    path: __dirname + "/templates/ReportsWOTax.html",
+    path: "./templates/ReportsWOTax.html",
     id: "ReportsWOTax",
   },
   {
-    path: __dirname + "/templates/ReportsWTax.html",
+    path: "./templates/ReportsWTax.html",
     id: "ReportsWTax",
   },
 ];
@@ -68,24 +68,19 @@ app.post("/upload-csv", upload.single("file"), async (req, res) => {
   const data = await parseCSVBuffer(buffer);
 
   const promises = data.map(async (csvRowData) => {
-    const pdfPromises = certificates.map(async (certificate, index) => {
+    const pdfPromises = certificates.map(async (certificate) => {
       const certificateHtml = await generateCertificateHtml(
         certificate,
         csvRowData
       );
-      const pdfFilePath = `./certificates/${csvRowData.name}.${certificate.id}.pdf`;
-      await convertHTMLToPDF(
-        certificateHtml,
-        pdfFilePath
-        // index === certificates.length - 1 ? true : false
-      );
+      const pdfFilePath = `./certificates/${csvRowData.rank}.${certificate.id}.pdf`;
+      await convertHTMLToPDF(certificateHtml, pdfFilePath);
     });
 
     await Promise.all(pdfPromises);
   });
 
   await Promise.all(promises);
-  console.log(promises);
 
   const zipFileName = `${data[0].name}_certificates.zip`;
 
@@ -93,14 +88,12 @@ app.post("/upload-csv", upload.single("file"), async (req, res) => {
 });
 
 async function generateCertificateHtml(certificate, csvRowData) {
-  console.log("called generateCertificateHtml");
   const data = await fs.promises.readFile(certificate.path, "utf8");
   const template = handlebars.compile(data);
   return template(csvRowData);
 }
 
-async function convertHTMLToPDF(content, outputFilePath, isLast) {
-  console.log("called convertHTMLToPDF");
+async function convertHTMLToPDF(content, outputFilePath) {
   const page = await browser.newPage();
   await page.setContent(content);
 
@@ -120,16 +113,11 @@ async function convertHTMLToPDF(content, outputFilePath, isLast) {
     path: outputFilePath,
     width: pdfWidth,
     height: pdfHeight,
-    // printBackground: true,
+    printBackground: true,
   });
-  // if (isLast) {
-  //   await browser.close();
-  // }
-  // console.log({ isLast });
 }
 
 async function parseCSVBuffer(buffer) {
-  console.log("called parseCSVBuffer");
   return new Promise((resolve, reject) => {
     const results = [];
 
@@ -153,7 +141,6 @@ async function parseCSVBuffer(buffer) {
 }
 
 function createAndSendZip(res, zipFileName) {
-  console.log("called createAndSendZip");
   const directoryPath = "./certificates";
   const zip = archiver("zip", {
     zlib: { level: 9 },
@@ -175,11 +162,12 @@ function createAndSendZip(res, zipFileName) {
 
       zip.finalize();
       res.attachment(zipFileName);
+      
     }
   });
 }
 
-process.on("SIGINT", async () => {
+process.on('SIGINT', async () => {
   if (browser) {
     await browser.close();
   }
@@ -203,4 +191,4 @@ app.listen(port, () => {
 //   })
 //   .listen(port, function () {
 //     console.log(`server is running on port ${port}`);
-//   });
+//    });
