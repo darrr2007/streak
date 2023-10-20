@@ -12,25 +12,6 @@ var https = require("https");
 const app = express();
 const port = process.env.PORT || 443;
 
-let browser;
-
-puppeteer
-  .launch({
-    headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable--accelerated-2d-canvas",
-      "--no-first-run",
-      "--no-zygote",
-      "--disable-gpu",
-    ],
-  })
-  .then((res) => {
-    browser = res;
-  });
-
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
@@ -96,7 +77,24 @@ async function generateCertificateHtml(certificate, csvRowData) {
 }
 
 async function convertHTMLToPDF(content, outputFilePath) {
-  console.log("called convertHTMLToPDF");
+  let browser;
+
+  puppeteer
+    .launch({
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable--accelerated-2d-canvas",
+        "--no-first-run",
+        "--no-zygote",
+        "--disable-gpu",
+      ],
+    })
+    .then((res) => {
+      browser = res;
+    });
   const page = await browser.newPage();
   await page.setContent(content);
 
