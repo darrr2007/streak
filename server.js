@@ -121,6 +121,7 @@ async function convertHTMLToPDF(content, outputFilePath) {
     ],
   });
   const page = await browser.newPage();
+  await page.setDefaultNavigationTimeout(0);
   await page.setContent(content);
 
   const contentBox = await page.evaluate(() => {
