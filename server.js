@@ -8,7 +8,6 @@ const archiver = require("archiver");
 const { Readable } = require("stream");
 const handlebars = require("handlebars");
 var https = require("https");
-const { Cluster } = require("puppeteer-cluster");
 
 const app = express();
 const port = process.env.PORT || 443;
