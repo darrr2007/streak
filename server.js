@@ -8,6 +8,7 @@ const archiver = require("archiver");
 const { Readable } = require("stream");
 const handlebars = require("handlebars");
 var https = require("https");
+const { Cluster } = require("puppeteer-cluster");
 
 const app = express();
 const port = process.env.PORT || 443;
@@ -77,45 +78,74 @@ async function generateCertificateHtml(certificate, csvRowData) {
 }
 
 async function convertHTMLToPDF(content, outputFilePath) {
-  let browser;
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable--accelerated-2d-canvas",
+      "--no-first-run",
+      "--no-zygote",
+      "--disable-gpu",
+    ],
+  });
+  const page = await browser.newPage();
+  await page.setContent(content);
 
-  puppeteer
-    .launch({
-      headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable--accelerated-2d-canvas",
-        "--no-first-run",
-        "--no-zygote",
-        "--disable-gpu",
-      ],
-    })
-    .then(async (res) => {
-      browser = res;
-      const page = await browser.newPage();
-      await page.setContent(content);
+  const contentBox = await page.evaluate(() => {
+    const element = document.querySelector("div");
+    const rect = element.getBoundingClientRect();
+    return {
+      width: rect.width,
+      height: rect.height,
+    };
+  });
 
-      const contentBox = await page.evaluate(() => {
-        const element = document.querySelector("div");
-        const rect = element.getBoundingClientRect();
-        return {
-          width: rect.width,
-          height: rect.height,
-        };
-      });
+  const pdfWidth = contentBox.width;
+  const pdfHeight = contentBox.height;
+  await page.pdf({ path: pdfFilePath, width: pdfWidth, height: pdfHeight });
+  await browser.close();
 
-      const pdfWidth = contentBox.width;
-      const pdfHeight = contentBox.height;
+  // let browser;
 
-      await page.pdf({
-        path: outputFilePath,
-        width: pdfWidth,
-        height: pdfHeight,
-        // printBackground: true,
-      });
-    });
+  // puppeteer
+  //   .launch({
+  //     headless: true,
+  //     args: [
+  //       "--no-sandbox",
+  //       "--disable-setuid-sandbox",
+  //       "--disable-dev-shm-usage",
+  //       "--disable--accelerated-2d-canvas",
+  //       "--no-first-run",
+  //       "--no-zygote",
+  //       "--disable-gpu",
+  //     ],
+  //   })
+  //   .then(async (res) => {
+  //     browser = res;
+  //     const page = await browser.newPage();
+  //     await page.setContent(content);
+
+  //     const contentBox = await page.evaluate(() => {
+  //       const element = document.querySelector("div");
+  //       const rect = element.getBoundingClientRect();
+  //       return {
+  //         width: rect.width,
+  //         height: rect.height,
+  //       };
+  //     });
+
+  //     const pdfWidth = contentBox.width;
+  //     const pdfHeight = contentBox.height;
+
+  //     await page.pdf({
+  //       path: outputFilePath,
+  //       width: pdfWidth,
+  //       height: pdfHeight,
+  //       // printBackground: true,
+  //     });
+  //   });
 }
 
 async function parseCSVBuffer(buffer) {
