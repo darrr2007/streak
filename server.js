@@ -57,6 +57,10 @@ const certificates = [
     path: "./templates/ReportsWTax.html",
     id: "ReportsWTax",
   },
+  {
+    path: "./templates/ReportsV3.html",
+    id: "ReportsV3",
+  },
 ];
 
 app.post("/upload-csv", upload.single("file"), async (req, res) => {
