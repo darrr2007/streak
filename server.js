@@ -58,6 +58,10 @@ const certificates = [
     id: "ReportsWTax",
   },
   {
+    path: "./templates/ReportsV3WOTax.html",
+    id: "ReportV3WOTax",
+  },
+  {
     path: "./templates/ReportsV3.html",
     id: "ReportsV3",
   },
