@@ -425,13 +425,18 @@
   opacity: 0.9;
 }
 .class,
-.class1 {
+.class1,.class-name {
   position: absolute;
   top: 0;
   line-height: 101%;
 }
 .class {
-  right: 0;
+  left: 120px;
+  opacity: 0.9;
+  white-space: nowrap;
+}
+.class-name {
+  left: 35px;
   opacity: 0.9;
 }
 .class1 {
@@ -451,7 +456,7 @@
 }
 .batch {
   top: 0.6px;
-  right: 0;
+  right: -3px;
   opacity: 0.9;
 }
 .batch1 {
@@ -472,19 +477,22 @@
 }
 .school {
   top: 0.4px;
-  right: 0;
+left: 45px;
   opacity: 0.9;
+ 
+  white-space: nowrap;
 }
 .school1 {
   top: 0;
-  right: 252px;
+  right: 259px;
   font-size: 11.85px;
   color: #888;
 }
 .school-parent {
   position: relative;
-  width: 293px;
+  width:300px;
   height: 12.4px;
+  text-align: left !important;
 }
 .date-of-examination {
   position: absolute;
@@ -892,7 +900,7 @@
             <div class="name">{{name}}</div>
             <div class="frame-div">
               <div class="class-parent">
-                <div class="class">{{class}}</div>
+                <div class="class-name">{{class}}</div>
                 <b class="class1">Class:</b>
               </div>
               <div class="batch-parent">

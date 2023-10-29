@@ -41,22 +41,22 @@ app.get("/", (req, res) => {
 });
 
 const certificates = [
-  {
-    path: "./templates/OutstandingCertificate.html",
-    id: "OutstandingCertificate",
-  },
-  {
-    path: "./templates/ParticipationCertificate.html",
-    id: "ParticipationCertificate",
-  },
-  {
-    path: "./templates/ReportsWOTax.html",
-    id: "ReportsWOTax",
-  },
-  {
-    path: "./templates/ReportsWTax.html",
-    id: "ReportsWTax",
-  },
+  // {
+  //   path: "./templates/OutstandingCertificate.html",
+  //   id: "OutstandingCertificate",
+  // },
+  // {
+  //   path: "./templates/ParticipationCertificate.html",
+  //   id: "ParticipationCertificate",
+  // },
+  // {
+  //   path: "./templates/ReportsWOTax.html",
+  //   id: "ReportsWOTax",
+  // },
+  // {
+  //   path: "./templates/ReportsWTax.html",
+  //   id: "ReportsWTax",
+  // },
   {
     path: "./templates/ReportsV3WOTax.html",
     id: "ReportV3WOTax",
@@ -103,7 +103,7 @@ async function generateCertificateHtml(certificate, csvRowData) {
 
 async function convertHTMLToPDF(content, outputFilePath) {
   const page = await browser.newPage();
-  await page.setContent(content);
+  await page.setContent(content, { timeout : 1000000});
 
   const contentBox = await page.evaluate(() => {
     const element = document.querySelector("div");
