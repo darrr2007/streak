@@ -41,28 +41,28 @@ app.get("/", (req, res) => {
 });
 
 const certificates = [
+  // {
+  //   path: __dirname + "/templates/OutstandingCertificate.html",
+  //   id: "OutstandingCertificate",
+  // },
   {
-    path: "./templates/OutstandingCertificate.html",
-    id: "OutstandingCertificate",
-  },
-  {
-    path: "./templates/ParticipationCertificate.html",
+    path: __dirname + "/templates/ParticipationCertificate.html",
     id: "ParticipationCertificate",
   },
+  // {
+  //   path: __dirname + "/templates/ReportsWOTax.html",
+  //   id: "ReportsWOTax",
+  // },
+  // {
+  //   path: __dirname + "/templates/ReportsWTax.html",
+  //   id: "ReportsWTax",
+  // },
+  // {
+  //   path: __dirname + "/templates/ReportsV3WOTax.html",
+  //   id: "ReportV3WOTax",
+  // },
   {
-    path: "./templates/ReportsWOTax.html",
-    id: "ReportsWOTax",
-  },
-  {
-    path: "./templates/ReportsWTax.html",
-    id: "ReportsWTax",
-  },
-  {
-    path: "./templates/ReportsV3WOTax.html",
-    id: "ReportV3WOTax",
-  },
-  {
-    path: "./templates/ReportsV3.html",
+    path: __dirname + "/templates/ReportsV3.html",
     id: "ReportsV3",
   },
 ];
@@ -81,7 +81,8 @@ app.post("/upload-csv", upload.single("file"), async (req, res) => {
         certificate,
         csvRowData
       );
-      const pdfFilePath = `./certificates/${csvRowData.rank}.${certificate.id}.pdf`;
+      const pdfFilePath =
+        __dirname + `/certificates/${csvRowData.rank}.${certificate.id}.pdf`;
       await convertHTMLToPDF(certificateHtml, pdfFilePath);
     });
 
@@ -170,12 +171,11 @@ function createAndSendZip(res, zipFileName) {
 
       zip.finalize();
       res.attachment(zipFileName);
-      
     }
   });
 }
 
-process.on('SIGINT', async () => {
+process.on("SIGINT", async () => {
   if (browser) {
     await browser.close();
   }
