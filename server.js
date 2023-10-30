@@ -61,10 +61,10 @@ const certificates = [
     path: "./templates/ReportsV3WOTax.html",
     id: "ReportV3WOTax",
   },
-  {
-    path: "./templates/ReportsV3.html",
-    id: "ReportsV3",
-  },
+  // {
+  //   path: "./templates/ReportsV3.html",
+  //   id: "ReportsV3",
+  // },
 ];
 
 app.post("/upload-csv", upload.single("file"), async (req, res) => {
@@ -76,6 +76,7 @@ app.post("/upload-csv", upload.single("file"), async (req, res) => {
   const data = await parseCSVBuffer(buffer);
 
   const promises = data.map(async (csvRowData) => {
+    console.log("hello");
     const pdfPromises = certificates.map(async (certificate) => {
       const certificateHtml = await generateCertificateHtml(
         certificate,
@@ -103,7 +104,7 @@ async function generateCertificateHtml(certificate, csvRowData) {
 
 async function convertHTMLToPDF(content, outputFilePath) {
   const page = await browser.newPage();
-  await page.setContent(content, { timeout : 1000000});
+  await page.setContent(content, { timeout: 1000000 });
 
   const contentBox = await page.evaluate(() => {
     const element = document.querySelector("div");
@@ -170,12 +171,11 @@ function createAndSendZip(res, zipFileName) {
 
       zip.finalize();
       res.attachment(zipFileName);
-      
     }
   });
 }
 
-process.on('SIGINT', async () => {
+process.on("SIGINT", async () => {
   if (browser) {
     await browser.close();
   }
